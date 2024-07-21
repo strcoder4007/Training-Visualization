@@ -141,6 +141,10 @@ for params in net.parameters():
         print(params.shape, params.sum(axis=1).shape)
 
 
+torch.randn(2)
+
+
+import copy
 from matplotlib import style
 
 style.use("dark_background")
@@ -155,32 +159,66 @@ def visualize_layers(sample_num, fig):
 
         prediction = torch.argmax(outputs[sample_num])
 
+        classes = { 0: "T-shirt/top", 
+                    1: "Trouser", 
+                    2: "Pullover", 
+                    3: "Dress", 
+                    4: "Coat", 
+                    5: "Sandal", 
+                    6: "Shirt", 
+                    7:"Sneaker", 
+                    8:"Bag", 
+                    9:"Ankle boot"
+        }
+
         if prediction == output_truth:
-            title_text = f"Correct Prediction { prediction+1 }, Truth { output_truth+1 }"
+            title_text = f"[Truth: { classes[int(output_truth)] }]   [Prediction: { classes[int(prediction)] }]"
             fig.suptitle(title_text, fontsize=20, color='g')
         else: 
-            title_text = f"Wrong Prediction { prediction+1 }, Truth { output_truth+1 }"
+            title_text = f"[Truth: { classes[int(output_truth)] }]   [Prediction: { classes[int(prediction)] }]"
             fig.suptitle(title_text, fontsize=20, color='r')
 
 
         ax0 = plt.subplot2grid((1, 7), (0, 0), rowspan=1, colspan=1)
         ax1 = plt.subplot2grid((1, 7), (0, 1), rowspan=1, colspan=1)
+        ax1.set_xticks([])
         ax2 = plt.subplot2grid((1, 7), (0, 2), rowspan=1, colspan=1)
+        ax2.set_xticks([])
         ax3 = plt.subplot2grid((1, 7), (0, 3), rowspan=1, colspan=1)
+        ax3.set_xticks([])
         ax4 = plt.subplot2grid((1, 7), (0, 4), rowspan=1, colspan=1)
+        ax4.set_xticks([])
+        ax5 = plt.subplot2grid((1, 7), (0, 5), rowspan=1, colspan=1)
+        ax6 = plt.subplot2grid((1, 7), (0, 6), rowspan=1, colspan=1)
+
+        plt.yticks([i for i in range(10)], [classes[i] for i in range(10)])
 
         layers = []
 
+        relu = nn.ReLU()
+
         for params in net.parameters():
             if len(params.shape) == 2:
-                layers.append([params.sum(axis=1).detach().cpu().numpy()])
-        
+                layer = params.sum(axis=1)
+                relu_layer = layer
+
+                relu_layer = [relu(relu_layer).detach().cpu().numpy()]
+                layer = [layer.detach().cpu().numpy()]
+
+                layers.append(layer)
+                layers.append(relu_layer)
+
+        ## remove the last relu layer because we will be using softmax
+        layers = layers[:-1]
+        ## Add the softmax layer
         layers.append([outputs[sample_num].detach().cpu().numpy()])
 
         layer_1 = np.rot90(layers[0], k=3, axes=(0, 1))
         layer_2 = np.rot90(layers[1], k=3, axes=(0, 1))
         layer_3 = np.rot90(layers[2], k=3, axes=(0, 1))
         layer_4 = np.rot90(layers[3], k=3, axes=(0, 1))
+        layer_5 = np.rot90(layers[4], k=3, axes=(0, 1))
+        layer_6 = np.rot90(layers[5], k=3, axes=(0, 1))
 
 
         ax0.imshow(input_data.reshape(28, 28), cmap='gray')
@@ -189,6 +227,8 @@ def visualize_layers(sample_num, fig):
         ax2.imshow(layer_2, cmap="RdYlGn")
         ax3.imshow(layer_3, cmap="RdYlGn")
         ax4.imshow(layer_4, cmap="RdYlGn")
+        ax5.imshow(layer_5, cmap="RdYlGn")
+        ax6.imshow(layer_6, cmap="RdYlGn")
 
         ax0.axis("off")
         
