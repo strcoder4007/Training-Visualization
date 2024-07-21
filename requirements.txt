@@ -1,3 +1,6 @@
 tk
+torch
+torchvision
+imageio
 pickle
 opencv-python
